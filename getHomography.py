@@ -10,7 +10,7 @@ class getHomography:
         self._right_clicks = []
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.setMouseCallback('image', self.mouse_callback)
-        cv2.imshow('image', img)
+        cv2.imshow('image', self._img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -37,10 +37,15 @@ class getHomography:
 
         # l has list of points
         H = cv2.findHomography(np.array(self._right_clicks), np.array(l))[0]
+        cv2.destroyAllWindows()
+        self._img =cv2.warpPerspective(self._img,H, (300,300))
+        cv2.imshow('image', self._img)
+        cv2.waitKey(0)
+
 
         print H
 
 
-if __name__ == '__main__':
-    img = cv2.imread('00000.png',0)
-    getter = getHomography(img)
+##if __name__ == '__main__':
+##    img = cv2.imread('00000.png',0)
+##    getter = getHomography(img)
