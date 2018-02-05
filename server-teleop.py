@@ -8,15 +8,18 @@ import pygame
 
 import PiBot as PB
 
+from data_logs import *
+
 
 # write your command to initialise robot here
-
-bot = PB.PiBot('10.0.0.23')
+ip = '10.0.0.23'
+bot = PB.PiBot(ip)
+logger = DataLogger(bot)
 
 pygame.init()
 pygame.display.set_mode((10,10))
 
-speed = 50
+speed = 40
 
 try:
     print("TELEOP")
@@ -41,8 +44,8 @@ try:
             if event.type == pygame.KEYUP:
                 print "Done"
                 # stop the robot on Key up
-                bot.setMotorSpeeds(0, 0)
+                bot.stop()
 
 except KeyboardInterrupt:
-    bot.setMotorSpeeds(0, 0)
-    PB.stop()
+    bot.stop()
+    logger.stop()
