@@ -1,1 +1,1 @@
-image_000000.png 0 0
+calibration.png 0 0
