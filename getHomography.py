@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import urllib
 
 
@@ -34,7 +35,11 @@ class getHomography:
             p = list(map(float, s.split()))
             l = l + [p]
 
-        print l
+        # l has list of points
+        H = cv2.findHomography(np.array(self._right_clicks), np.array(l))[0]
+
+        print H
+
 
 if __name__ == '__main__':
     img = cv2.imread('00000.png',0)
