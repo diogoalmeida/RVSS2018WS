@@ -11,9 +11,12 @@ import PiBot as PB
 
 # write your command to initialise robot here
 
+bot = PB.PiBot('10.0.0.23')
 
 pygame.init()
 pygame.display.set_mode((10,10))
+
+speed = 50
 
 try:
     print("TELEOP")
@@ -24,20 +27,22 @@ try:
                 print event.type
                 if event.key == pygame.K_UP:
                     print("FORWARD")
-                    # write your command here
+                    bot.setMotorSpeeds(speed, -speed)
                 if event.key == pygame.K_DOWN:
                     print("BACKWARD")
-                    # write your command here
+                    bot.setMotorSpeeds(-speed, speed)
                 if event.key == pygame.K_LEFT:
                     print "LEFT"
-                    # write your command here
+                    bot.setMotorSpeeds(speed, speed)
                 if event.key == pygame.K_RIGHT:
                     print "RIGHT"
-                    # write your command here
+                    bot.setMotorSpeeds(-speed, -speed)
 
             if event.type == pygame.KEYUP:
                 print "Done"
                 # stop the robot on Key up
+                bot.setMotorSpeeds(0, 0)
 
 except KeyboardInterrupt:
-    pb.stop()
+    bot.setMotorSpeeds(0, 0)
+    PB.stop()
