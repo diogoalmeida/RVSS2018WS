@@ -1,4 +1,3 @@
-
-thirdparties/gtsam/build/
-
+data_log/*.png
+data_log/*.csv
 *.pyc

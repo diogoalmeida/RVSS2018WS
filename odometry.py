@@ -5,8 +5,8 @@ CALIB = 0.360 / ((622 + 653)/2)
 BASELINE = 12.499/90
 
 class Odometry:
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, ip):
+        self.bot = PB.PiBot(ip)
         self.reset()
 
     def getPos(self):
