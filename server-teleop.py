@@ -8,18 +8,14 @@ import pygame
 
 import PiBot as PB
 
-from data_logs import *
-
-
 # write your command to initialise robot here
 ip = '10.0.0.23'
 bot = PB.PiBot(ip)
-logger = DataLogger(bot)
 
 pygame.init()
 pygame.display.set_mode((10,10))
 
-speed = 40
+speed = 50
 
 try:
     print("TELEOP")
@@ -48,4 +44,3 @@ try:
 
 except KeyboardInterrupt:
     bot.stop()
-    logger.stop()
