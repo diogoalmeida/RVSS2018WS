@@ -2,7 +2,7 @@ import cv2
 import getHomography as homography
 
 filepath = "data_log.txt"
-datapath = "test_log/"
+datapath = "data_log/"
 
 count = 0
 with open(datapath+filepath) as f:

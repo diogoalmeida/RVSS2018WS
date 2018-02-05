@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import urllib
 
-
+IMG_DIM = (320, 240)
+NUM_SAMPLES = 4
 class getHomography:
 
     def __init__(self, image):
@@ -24,26 +25,30 @@ class getHomography:
             #you probably want to remove this later
             print self._right_clicks
 
-            if len(self._right_clicks) >= 4:
+            if len(self._right_clicks) >= NUM_SAMPLES:
                 self.compute_homography()
 
     def compute_homography(self):
         """Get points values and compute homography."""
         l = []
-        for i in range(1,5):
+        for i in range(1,NUM_SAMPLES + 1):
             s = raw_input('insert p' + str(i) + ': ')
             p = list(map(float, s.split()))
             l = l + [p]
 
         # l has list of points
-        H = cv2.findHomography(np.array(self._right_clicks), np.array(l))[0]
+        print("right_clicks: " + str(np.array(self._right_clicks)))
+        print("correspondences: " + str(np.array(l)))
+        H, status = cv2.findHomography(np.array(self._right_clicks), np.array(l))
+        print H
+        print status
         cv2.destroyAllWindows()
-        self._img =cv2.warpPerspective(self._img,H, (300,300))
+        self._img = cv2.warpPerspective(self._img,H, (self._img.shape[1],self._img.shape[0]))
+        cv2.imwrite("output.png", self._img)
         cv2.imshow('image', self._img)
         cv2.waitKey(0)
 
 
-        print H
 
 
 ##if __name__ == '__main__':
