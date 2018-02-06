@@ -13,7 +13,7 @@ class map:
         """Resolution: how many mm^2 per cell."""
         self._res = resolution
         self._dim = grid_dim
-        self._grid = np.ones(grid_dim, float)
+        self._grid = np.zeros(grid_dim, float)
         self._pose = np.array([0., 0., 0.], float)
 
     def show_grid(self):
@@ -35,15 +35,21 @@ class map:
             plt.plot(self._pose[0], self._pose[1], 'ro')
             plt.draw()
 
-            M = self.get_M(self._pose)
-            # print M
+            # M = self.get_M(self._pose)
+            M = cv2.getRotationMatrix2D((0, 266),np.rad2deg(self._pose[2]),1)
+            M[0, 2] = M[0,2] + self._pose[0]
+            M[1, 2] = M[1,2] + self._pose[1]
+
+            print M
 
             img = cv2.imread(img_dir + '/' + obs[0])
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-            img = cv2.warpPerspective(img, H, self._dim)
-            resized_image = cv2.resize(img, self._dim)
-            resized_image = cv2.warpAffine(resized_image, M, self._dim)
-            cv2.imshow("warped img", resized_image)
+            img = cv2.warpPerspective(img, H, self._dim) # img in the robot frame
+            img = cv2.warpAffine(img, M, self._dim) # img in the world frame
+            cv2.circle(img,(int(self._pose[0]),int(self._pose[1] + 266)), 31, (255,255,255), -1)
+            # temp = self._grid + resized_image
+            # temp = cv2.addWeighted(self._grid, 0.5, resized_image,0.5,0)
+            cv2.imshow("warped img", img)
             cv2.waitKey(0)
         plt.show()
 
@@ -74,11 +80,11 @@ class map:
         M = self.get_M(np.array([dx, dy, angle]))
 
         # adjust for the centre of rotation. TODO: compensate for camera movement?
-        cr = np.array([[0.0],[266]])
-        R  = M[:2,:2]
-        tc = R.dot(cr) - cr
-        M[0,2] -= tc[0]
-        M[1,2] -= tc[1]
+        # cr = np.array([self._pose[0] - 160.0 , self._pose[1] - 266])
+        # R  = M[:2,:2]
+        # tc = R.dot(cr) - cr
+        # M[0,2] -= tc[0]
+        # M[1,2] -= tc[1]
 
         return M
 
@@ -96,7 +102,7 @@ def parse_obs(file_dir, res):
     return obs
 
 if __name__ == "__main__":
-    dim = (300, 300)
+    dim = (500, 500)
     resolution = 10
 
     observations = parse_obs(img_dir + "/data_log.txt", resolution)
