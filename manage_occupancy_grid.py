@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from IPython import embed
+from matplotlib import pyplot as plt
 
 img_dir = './test_log'
 H = np.array([[  1.12375325e-01,  -4.86001720e-01,   8.77712777e+02],
@@ -26,11 +27,16 @@ class map:
            @observations: tupple (img, delta_pose).
         """
         for obs in observations:
-            local_M = self.get_motion(obs[1:3])
-            self._pose[0:2] = np.dot(local_M, self._pose)
+            # print obs
+            self._pose[0] = self._pose[0] + obs[1]*np.cos(self._pose[2])
+            self._pose[1] = self._pose[1] + obs[1]*np.sin(self._pose[2])
             self._pose[2] = self._pose[2] + obs[2]
+            print self._pose[2]
+            plt.plot(self._pose[0], self._pose[1], 'ro')
+            plt.draw()
+
             M = self.get_M(self._pose)
-            print M
+            # print M
 
             img = cv2.imread(img_dir + '/' + obs[0])
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -39,6 +45,7 @@ class map:
             resized_image = cv2.warpAffine(resized_image, M, self._dim)
             cv2.imshow("warped img", resized_image)
             cv2.waitKey(0)
+        plt.show()
 
     def get_M(self, pose):
         x = pose[0]
@@ -57,17 +64,17 @@ class map:
 
         # print delta_pos
         dist = delta_pos[0]
-        angle = delta_pos[1]
+        angle = np.deg2rad(delta_pos[1])
 
         s = np.sin(angle)
         c = np.cos(angle)
-        dx = dist*s
-        dy = -dist*c
+        dx = dist*c
+        dy = dist*s
 
         M = self.get_M(np.array([dx, dy, angle]))
 
         # adjust for the centre of rotation. TODO: compensate for camera movement?
-        cr = np.array([[0.0],[300]])
+        cr = np.array([[0.0],[266]])
         R  = M[:2,:2]
         tc = R.dot(cr) - cr
         M[0,2] -= tc[0]
@@ -76,7 +83,7 @@ class map:
         return M
 
 
-def parse_obs(file_dir):
+def parse_obs(file_dir, res):
     data = open(file_dir)
     obs = []
 
@@ -92,7 +99,7 @@ if __name__ == "__main__":
     dim = (300, 300)
     resolution = 10
 
-    observations = parse_obs(img_dir + "/data_log.txt")
+    observations = parse_obs(img_dir + "/data_log.txt", resolution)
     m = map(dim, resolution)
     m.update_map(observations)
     m.show_grid()
