@@ -1,0 +1,98 @@
+import numpy as np
+import cv2
+from IPython import embed
+
+img_dir = './test_log'
+H = np.array([[  1.12375325e-01,  -4.86001720e-01,   8.77712777e+02],
+             [  -2.36834933e+00,   4.49234588e+00,   6.64034708e+02],
+             [   4.01039286e-04,   1.59276405e-02,   1.00000000e+00]],float)
+
+class map:
+    def __init__(self, grid_dim, resolution):
+        """Resolution: how many mm^2 per cell."""
+        self._res = resolution
+        self._dim = grid_dim
+        self._grid = np.ones(grid_dim, float)
+        self._pose = np.array([0., 0., 0.], float)
+
+    def show_grid(self):
+        cv2.imshow("map", self._grid)
+        cv2.waitKey(0)
+
+    def update_map(self, observations):
+        """Convert images to the correct map pose and decide
+           whether a cell is occupied or not.
+
+           @observations: tupple (img, delta_pose).
+        """
+        for obs in observations:
+            local_M = self.get_motion(obs[1:3])
+            self._pose[0:2] = np.dot(local_M, self._pose)
+            self._pose[2] = self._pose[2] + obs[2]
+            M = self.get_M(self._pose)
+            print M
+
+            img = cv2.imread(img_dir + '/' + obs[0])
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            img = cv2.warpPerspective(img, H, self._dim)
+            resized_image = cv2.resize(img, self._dim)
+            resized_image = cv2.warpAffine(resized_image, M, self._dim)
+            cv2.imshow("warped img", resized_image)
+            cv2.waitKey(0)
+
+    def get_M(self, pose):
+        x = pose[0]
+        y = pose[1]
+        angle = pose[2]
+
+        s = np.sin(angle)
+        c = np.cos(angle)
+        M = np.array([[c, -s, x], [s, c, y]], float)
+
+        return M
+
+    def get_motion(self, delta_pos):
+        """Get the matrix that shifts coordinates between two poses
+           related by delta_pos = (delta_distance, delta_angle)."""
+
+        # print delta_pos
+        dist = delta_pos[0]
+        angle = delta_pos[1]
+
+        s = np.sin(angle)
+        c = np.cos(angle)
+        dx = dist*s
+        dy = -dist*c
+
+        M = self.get_M(np.array([dx, dy, angle]))
+
+        # adjust for the centre of rotation. TODO: compensate for camera movement?
+        cr = np.array([[0.0],[300]])
+        R  = M[:2,:2]
+        tc = R.dot(cr) - cr
+        M[0,2] -= tc[0]
+        M[1,2] -= tc[1]
+
+        return M
+
+
+def parse_obs(file_dir):
+    data = open(file_dir)
+    obs = []
+
+    for line in data:
+        l = line.split()
+        l[1] = float(l[1])
+        l[2] = np.deg2rad(float(l[2]))
+        obs = obs + [l]
+
+    return obs
+
+if __name__ == "__main__":
+    dim = (300, 300)
+    resolution = 10
+
+    observations = parse_obs(img_dir + "/data_log.txt")
+    m = map(dim, resolution)
+    m.update_map(observations)
+    m.show_grid()
