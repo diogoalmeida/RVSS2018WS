@@ -39,24 +39,24 @@ class map:
             plt.draw()
 
             pose_img = [0, 0]
-            pose_img[0] = int((self._pose[0]/self._res + self._dim[0]/2)/4)
-            pose_img[1] = int((self._pose[1]/self._res + self._dim[1]/2)/4)
+            pose_img[0] = int(self._pose[0]/self._res + self._dim[0]/2)
+            pose_img[1] = int(self._pose[1]/self._res + self._dim[1]/2)
             # M = self.get_M(pose_img + [self._pose[2]])
-            M = cv2.getRotationMatrix2D((0, 0), np.rad2deg(self._pose[2]),1)
+            M = cv2.getRotationMatrix2D((0, 133), np.rad2deg(self._pose[2]),1)
             # M[0, 2] = M[0,2] + self._pose[0]
             # M[1, 2] = M[1,2] + self._pose[1]
 
             # print M
 
             img = cv2.imread(img_dir + '/' + obs[0])
-            reshape = (img.shape[1]/4, img.shape[0]/4)
+            reshape = (img.shape[1], img.shape[0])
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
             img = cv2.warpPerspective(img, H, self._dim) # img in the robot frame
             img = cv2.resize(img, reshape, interpolation = cv2.INTER_AREA)
             img = cv2.warpAffine(img, M, self._dim) # img in the world frame
 
             # cv2.imshow("img", img)
-            # cv2.waitKey(1)
+            # cv2.waitKey(0)
 
             tmp = np.zeros(self._dim, float)
             # img should be downsampled in a way we can add squares to the grid
@@ -65,9 +65,9 @@ class map:
                 for y in range(0, img.shape[1]):
                     # print img[x][y]
                     if img[x][y] > self._thres:
-                        g_x = int(pose_img[0] + x*self._res)
-                        g_y = int(pose_img[1] + y*self._res)
-                        if g_x < self._dim[0] and g_y < self._dim[1]:
+                        g_x = int(pose_img[1] + x - 133)
+                        g_y = int(pose_img[0] + y)
+                        if 0 < g_x and g_x < self._dim[0] and 0 < g_y and g_y < self._dim[1]:
                             tmp[g_x][g_y] = 1 #self._grid[g_x][g_y] + 0.1
 
             cv2.circle(tmp, (pose_img[0], pose_img[1]), 4, (255,255,255), -1)
