@@ -16,6 +16,9 @@ def estimate_motion(img1, img2, frame, filename, x, y,distX,distY,sum_dist):
     #img1 = cv2.warpPerspective(img1, H, (600,600))
     #img2 = cv2.warpPerspective(img2, H, (600,600))
 
+    #cv2.equalizeHist(img1)
+    #cv2.equalizeHist(img2)
+
     corners1 = cv2.goodFeaturesToTrack(img1, maxCorners=1000, qualityLevel=0.1, minDistance=2) 
     corners1 = np.float32(corners1) 
 
@@ -31,14 +34,41 @@ def estimate_motion(img1, img2, frame, filename, x, y,distX,distY,sum_dist):
         x, y = item[0] 
         cv2.circle(img2, (x,y), 5, 255, -1) 
 
-    lk_params = dict( winSize  = (11,11),maxLevel = 5, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 500, 0.03))
+    lk_params = dict( winSize  = (7,7),maxLevel = 5, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 500, 0.03))
 
-    p1, st, err = cv2.calcOpticalFlowPyrLK(img1, img2, corners1, None, **lk_params)
+    p1, st1, err = cv2.calcOpticalFlowPyrLK(img1, img2, corners1, None)    
+    p2, st2, err = cv2.calcOpticalFlowPyrLK(img2, img1, p1[st1==1], None)
+    
+    #print "diff:"
+    #print (p1[st1==1].shape[0]-1)
+    #print (p1.shape[0]-1)
+    #print (p2.shape[0]-1)
+    index = 0
+    
+    if(((p1.shape[0]-1)) < ((p2.shape[0]-1))):
+        index = (p1.shape[0]-1)
+    else:
+        index = (p2.shape[0]-1)
+        
+    #print index
+    
+    
+    for i in range(0,index):
+        #print p1[i][0][0], p1[i][0][1]
+        #print p2[i][0], p2[i][1]  
+        #print ((p1[i][0][1] - p2[i][1])*(p1[i][0][1] - p2[i][1]) + (p2[i][0]-p1[i][0][0]) *(p2[i][0]-p1[i][0][0]))
+        dist_eucl = math.sqrt((p1[i][0][1] - p2[i][1])*(p1[i][0][1] - p2[i][1]) + (p2[i][0]-p1[i][0][0]) *(p2[i][0]-p1[i][0][0]))
+        #print dist_eucl
+        if(dist_eucl < 30.0):
+            st1[i] = 0
+            #print "rejected"
+        
+        #print "----"
     
     
 
-    good_new = p1[st==1]
-    good_old = corners1[st==1]
+    good_new = p1[st1==1]
+    good_old = corners1[st1==1]
     
     if len(good_new) > 0 and len(good_old) > 0:
     
@@ -78,9 +108,6 @@ def estimate_motion(img1, img2, frame, filename, x, y,distX,distY,sum_dist):
         trnsfrm = cv2.estimateRigidTransform(good_old, good_new, False)
         #trnsfrm = cv2.getAffineTransform(good_old, good_new)
         
-        #print trnsfrm
-        
-        
         if trnsfrm is None:
             trnsfrm = np.array([[1, 0, 0], [0, 1, 0]])
             
@@ -94,12 +121,34 @@ def estimate_motion(img1, img2, frame, filename, x, y,distX,distY,sum_dist):
         
         vis = np.array([distX, distY,1])
         
-        #print distX, distY
         a = np.array([[0,0,1]])
     
         trnsfrm = np.concatenate((trnsfrm, a), axis=0)
         
         print trnsfrm
+        
+        '''
+        
+        for i,(new,old) in enumerate(zip(good_new,good_old)):
+            a,b = new.ravel()
+            c,d = old.ravel()
+            
+            pt = np.array([c,d,1])
+            new_pt = np.dot(trnsfrm,pt)
+            print "new point"
+            print new_pt
+            print a,b
+            eucl_dist = math.sqrt((trnsfrm[0][2]*trnsfrm[0][2]) + (trnsfrm[1][2]*trnsfrm[1][2]))
+        '''
+        
+        
+        #print trnsfrm
+        
+        
+        
+        
+        #print distX, distY
+        
         
         
         vis = np.dot(trnsfrm,vis)
@@ -193,7 +242,7 @@ with open(datapath+filepath) as f:
         if(count>1):
             img2_color = cv2.imread(datapath+data_text[0])        
             img2 = cv2.cvtColor(img2_color, cv2.COLOR_BGR2GRAY)
-            distX, distY, sum_dist = estimate_motion(prev_img,img2,img2,prev_file_name,x,y,distX,distY,sum_dist)
+            distX, distY, sum_dist = estimate_motion(prev_img,img2,img2,data_text[0],x,y,distX,distY,sum_dist)
             x = np.append(x, np.array([distX]), axis=0)
             y = np.append(y, np.array([distY]), axis=0)
             prev_img = img1
