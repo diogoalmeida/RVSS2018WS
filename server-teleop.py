@@ -26,10 +26,10 @@ try:
                 print event.type
                 if event.key == pygame.K_UP:
                     print("FORWARD")
-                    bot.setMotorSpeeds(speed, -speed)
+                    bot.setMotorSpeeds(-speed, speed)
                 if event.key == pygame.K_DOWN:
                     print("BACKWARD")
-                    bot.setMotorSpeeds(-speed, speed)
+                    bot.setMotorSpeeds(speed, -speed)
                 if event.key == pygame.K_LEFT:
                     print "LEFT"
                     bot.setMotorSpeeds(speed, speed)

@@ -15,8 +15,8 @@ class Odometry:
 
     def getDistTheta(self):
         pos = self.getPos()
-        dist = (pos[0] + pos[1]) / 2
-        theta = (pos[0] - pos[1]) / BASELINE * 180/np.pi
+        dist = -(pos[0] + pos[1]) / 2
+        theta = -(pos[0] - pos[1]) / BASELINE * 180/np.pi
         return dist, theta
 
     def getDistanceMeters(self):
@@ -31,4 +31,3 @@ class Odometry:
 
     def reset(self):
         self.starting_ticks = np.array(self.bot.getMotorTicks())
-

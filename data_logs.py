@@ -5,8 +5,9 @@ from odometry import *
 import threading
 import cv2
 
-DIST_THRESH  = 0.03  # 3 cm
-THETA_THRESH = 3     # 3 degrees
+DIST_THRESH  = 0.1  # 3 cm
+THETA_THRESH = 20     # 3 degrees
+directory = 'data_log_2'
 
 class DataLogger:
     def __init__(self, ip):
@@ -14,18 +15,19 @@ class DataLogger:
         self.odo = Odometry(ip)
         self.count = 0
 
-        self.file = open('data_log/log.csv', 'w')
+        self.file = open(directory + '/log.csv', 'w')
 
         self.running = True
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
     def run(self):
+        self.record()
         while self.running:
             tic = time.time()
             meters, degrees = self.odo.getDistTheta()
             #print 'Took %5.3f sec to get odometry' % (toc - tic)
-            #print 'Dist: %5.3f meter, Theta: %5.3f deg' % (meters, degrees)
+            print 'Dist: %5.3f meter, Theta: %5.3f deg' % (meters, degrees)
 
             if abs(meters) >= DIST_THRESH or abs(degrees) > THETA_THRESH:
                 self.record()
@@ -41,9 +43,10 @@ class DataLogger:
         meters, degrees = self.odo.getDistTheta()
         im = self.bot.getImageFromCamera()
 
-        cv2.imwrite('data_log/image_%06d.png' % (self.count), im)
+        name = 'image_%06d.png' % (self.count)
+        cv2.imwrite(directory + '/' + name, im)
 
-        line = '%d, %f, %f\n' % (self.count, meters, degrees)
+        line = '%s %f %f\n' % (name, meters, degrees)
         self.file.write(line)
         print line
 
@@ -67,5 +70,3 @@ raw_input()
 
 logger.stop()
 print 'Stopped'
-
-
