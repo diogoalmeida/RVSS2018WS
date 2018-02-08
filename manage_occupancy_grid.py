@@ -18,6 +18,7 @@ class map:
         self._grid = np.zeros(grid_dim, float)
         self._pose = np.array([0., 0., 0.], float)
         self._rect_pose_y = 0.
+        self._detection_thres = .4
 
         self.total_img = None
         self.count = None
@@ -104,7 +105,22 @@ class map:
         # cv2.waitKey(0)
         #plt.show()
 
-        img = self.total_img / (self.count + 1e-10)
+        # cv2.imshow("warped img", self.total_img)
+        # cv2.waitKey()
+        render = self.total_img / (self.count + 0.00001)
+        mask_improv = np.argwhere(render < self._detection_thres)
+        img = np.zeros(self._dim)
+        for x, y in mask_improv:
+                g_x = x
+                g_y = y
+                if 0 <= g_x and g_x < self._dim[0] and 0 <= g_y and g_y < self._dim[1]:
+                    img[g_x][g_y] = 1
+
+        img = 1 - img
+
+        # img = self.total_img / (self.count + 1e-10)
+        cv2.imshow("warped img", img)
+        cv2.waitKey()
         print cv2.imwrite('out.png', img*255)
 
 def parse_obs(file_dir, res):
