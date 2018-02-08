@@ -9,6 +9,9 @@ H = np.array([[  1.20327663e-01,  -3.64727670e-01,  -6.56911305e+02],
  [  2.13714786e+00,  -5.16938896e+00,  -5.75810099e+01],
  [ -9.65338835e-04,  -1.76374659e-02,   1.00000000e+00]],float)
 
+angular_scaling = 1.45
+linear_scaling = 1.5
+
 class map:
     def __init__(self, grid_dim, resolution):
         """Resolution: how many mm^2 per cell."""
@@ -146,8 +149,8 @@ def parse_obs(file_dir, res):
 
     for line in data:
         l = line.split()
-        l[1] = 100*float(l[1])
-        l[2] = np.deg2rad(float(l[2]))
+        l[1] = linear_scaling*100*float(l[1])
+        l[2] = angular_scaling*np.deg2rad(float(l[2]))
         obs = obs + [l]
 
     return obs
