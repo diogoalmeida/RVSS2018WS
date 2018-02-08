@@ -5,8 +5,8 @@ from odometry import *
 import threading
 import cv2
 
-DIST_THRESH  = 0.1  # 3 cm
-THETA_THRESH = 20     # 3 degrees
+DIST_THRESH  = 0.05  # 3 cm
+THETA_THRESH = 3     # 3 degrees
 directory = 'data_log_2'
 
 class DataLogger:
