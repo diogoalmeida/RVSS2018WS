@@ -14,8 +14,9 @@ class map:
         self._res = resolution
         self._dim = grid_dim
         self._thres = 125
-        self._grid = np.ones(grid_dim, float)
+        self._grid = np.zeros(grid_dim, float)
         self._pose = np.array([0., 0., 0.], float)
+        self._rect_pose_y = 0.
 
     def show_grid(self):
         cv2.imshow("map", self._grid)
@@ -30,44 +31,56 @@ class map:
         for obs in observations:
             # print obs
             self._pose[0] = self._pose[0] + obs[1]*np.cos(self._pose[2])
-            self._pose[1] = self._pose[1] + obs[1]*np.sin(self._pose[2])
+            self._rect_pose_y = self._rect_pose_y + obs[1]*np.sin(self._pose[2])
+            self._pose[1] = self._pose[1] - obs[1]*np.sin(self._pose[2])
             self._pose[2] = self._pose[2] + obs[2]
-            print self._pose[2]
-            plt.plot(self._pose[0], self._pose[1], 'ro')
+            # print self._pose[2]
+            plt.plot(self._pose[0], self._rect_pose_y, 'ro')
             plt.draw()
 
-            # M = self.get_M(self._pose)
-            M = cv2.getRotationMatrix2D((self._dim[0]/2, self._dim[1]/2),np.rad2deg(self._pose[2]),1)
-            M[0, 2] = M[0,2] + self._pose[0]
-            M[1, 2] = M[1,2] + self._pose[1]
+            pose_img = [0, 0]
+            pose_img[0] = int((self._pose[0]/self._res + self._dim[0]/2)/4)
+            pose_img[1] = int((self._pose[1]/self._res + self._dim[1]/2)/4)
+            # M = self.get_M(pose_img + [self._pose[2]])
+            M = cv2.getRotationMatrix2D((0, 0), np.rad2deg(self._pose[2]),1)
+            # M[0, 2] = M[0,2] + self._pose[0]
+            # M[1, 2] = M[1,2] + self._pose[1]
 
-            print M
+            # print M
 
             img = cv2.imread(img_dir + '/' + obs[0])
+            reshape = (img.shape[1]/4, img.shape[0]/4)
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-            img_dim = (self._dim[0]/self._res, self._dim[1]/self._res)
-            img = cv2.warpPerspective(img, H, img_dim) # img in the robot frame
-            img = cv2.warpAffine(img, M, img_dim) # img in the world frame
+            img = cv2.warpPerspective(img, H, self._dim) # img in the robot frame
+            img = cv2.resize(img, reshape, interpolation = cv2.INTER_AREA)
+            img = cv2.warpAffine(img, M, self._dim) # img in the world frame
 
+            # cv2.imshow("img", img)
+            # cv2.waitKey(1)
+
+            tmp = np.zeros(self._dim, float)
             # img should be downsampled in a way we can add squares to the grid
-            cv2.imshow("scaled_img", img)
-            cv2.waitKey(0)
-            for x in range(0, self._dim[0]/self._res):
-                for y in range(0, self._dim[1]/self._res):
-                    print img[x][y]
-                    if img[x][y] > self._thres:
-                        self._grid[int(M[0, 2] + x)][int(M[1,2] + y)] = 0
 
-            cv2.circle(self._grid, (int(self._pose[0] + self._dim[0]/2), int(self._pose[1] + self._dim[1]/2)), 4, (0,0,0), -1)
+            for x in range(0, img.shape[0]):
+                for y in range(0, img.shape[1]):
+                    # print img[x][y]
+                    if img[x][y] > self._thres:
+                        g_x = int(pose_img[0] + x*self._res)
+                        g_y = int(pose_img[1] + y*self._res)
+                        if g_x < self._dim[0] and g_y < self._dim[1]:
+                            tmp[g_x][g_y] = 1 #self._grid[g_x][g_y] + 0.1
+
+            cv2.circle(tmp, (pose_img[0], pose_img[1]), 4, (255,255,255), -1)
             # temp = self._grid + resized_image
             # temp = cv2.addWeighted(self._grid, 0.5, resized_image,0.5,0)
-            cv2.imshow("warped img", self._grid)
-            cv2.waitKey(0)
+            cv2.imshow("warped img", tmp)
+            cv2.waitKey(1)
+        # cv2.waitKey(0)
         plt.show()
 
     def get_M(self, pose):
-        x = pose[0]
-        y = pose[1]
+        x = 0*pose[0]
+        y = 0*pose[1]
         angle = pose[2]
 
         s = np.sin(angle)
@@ -115,7 +128,7 @@ def parse_obs(file_dir, res):
 
 if __name__ == "__main__":
     dim = (500, 500)
-    resolution = 1
+    resolution = 0.5 # mm^2 per cell
 
     observations = parse_obs(img_dir + "/data_log.txt", resolution)
     m = map(dim, resolution)
