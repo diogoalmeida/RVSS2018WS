@@ -4,10 +4,10 @@ from IPython import embed
 from matplotlib import pyplot as plt
 import time
 
-img_dir = './test_log'
-H = np.array([[  1.12375325e-01,  -4.86001720e-01,   8.77712777e+02],
-             [  -2.36834933e+00,   4.49234588e+00,   6.64034708e+02],
-             [   4.01039286e-04,   1.59276405e-02,   1.00000000e+00]],float)
+img_dir = './data_log_2'
+H = np.array([[  1.20327663e-01,  -3.64727670e-01,  -6.56911305e+02],
+ [  2.13714786e+00,  -5.16938896e+00,  -5.75810099e+01],
+ [ -9.65338835e-04,  -1.76374659e-02,   1.00000000e+00]],float)
 
 class map:
     def __init__(self, grid_dim, resolution):
@@ -56,7 +56,7 @@ class map:
             M[1, 2] = M[1,2] + pose_img[1] - rot_y
 
             # print M
-
+            print img_dir + '/' + obs[0]
             img = cv2.imread(img_dir + '/' + obs[0])
             mask = img * 0 + 1
 
@@ -129,7 +129,7 @@ def parse_obs(file_dir, res):
 
     for line in data:
         l = line.split()
-        l[1] = float(l[1])
+        l[1] = 100*float(l[1])
         l[2] = np.deg2rad(float(l[2]))
         obs = obs + [l]
 
@@ -137,9 +137,9 @@ def parse_obs(file_dir, res):
 
 if __name__ == "__main__":
     dim = (1000, 1000)
-    resolution = .5 # cm per pixel
+    resolution = .3 # cm per pixel
 
-    observations = parse_obs(img_dir + "/data_log.txt", resolution)
+    observations = parse_obs(img_dir + "/log.csv", resolution)
     m = map(dim, resolution)
     m.update_map(observations)
     #m.show_grid()
